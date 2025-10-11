@@ -39,7 +39,28 @@ ScrollingActivate() {
 ScrollingDeactivate() {
     global active := 0
     SetTimer(TimerScroll, 0)
-    SetTimer(TimerWheel, 0) 
+    SetTimer(TimerWheel, 0)
+}
+
+VolumeActivate() {
+    global outputMode
+    outputMode := "volume"
+    ScrollingActivate()
+}
+
+VolumeDeactivate() {
+    ScrollingDeactivate()
+    global outputMode
+    outputMode := "scroll"
+}
+
+AdjustVolume(deltaUnits) {
+    step := 1  ; percent per unit (tune if desired)
+    change := deltaUnits * 0.05 * step
+    if (change = 0)
+        return
+    changeStr := (change > 0) ? ("+" . change) : ("" . change)
+    SoundSetVolume(changeStr)  ; relative +N / -N supported in v2
 }
 
 ; Turn angle snapping on.
@@ -74,6 +95,9 @@ global cursorYMouseGetPos := 0
 global windowUnderMouse := ""
 global controlUnderMouse := ""
 
+; Volume mode
+global outputMode := "scroll"
+
 ; Texture
 global sensitivity := IniRead("config.ini", "Texture", "sensitivity")
 global refreshInterval := IniRead("config.ini", "Texture", "refreshInterval")
@@ -99,7 +123,7 @@ global snapDeviation := 0.0
 ; Acceleration
 global accelerationOn := StrLower(IniRead("config.ini", "Acceleration", "accelerationOn")) = "true"
 accelerationBlend := IniRead("config.ini", "Acceleration", "accelerationBlend")
-accelerationScale := IniRead("config.ini", "Acceleration", "accelerationScale") 
+accelerationScale := IniRead("config.ini", "Acceleration", "accelerationScale")
 accelerationScale *= refreshInterval
 global accelerationP := accelerationBlend / accelerationScale
 global accelerationQ := accelerationBlend + 1
@@ -127,13 +151,13 @@ MouseHook(nCode, wParam, lParam)
     static msllSize := 16  ; the actual struct is bigger, but we only need the first 16 bytes
     static msllBuffer := Buffer(msllSize, 0)
     DllCall("RtlMoveMemory", "ptr", msllBuffer.Ptr, "ptr", lParam, "ptr", msllSize)
-    messageX         := NumGet(msllBuffer,  0,  "int")
-    messageY         := NumGet(msllBuffer,  4,  "int")
-    messageMouseData := NumGet(msllBuffer,  8, "uint")
-    messageFlags     := NumGet(msllBuffer, 12, "uint")
-    
+    messageX := NumGet(msllBuffer, 0, "int")
+    messageY := NumGet(msllBuffer, 4, "int")
+    messageMouseData := NumGet(msllBuffer, 8, "uint")
+    messageFlags := NumGet(msllBuffer, 12, "uint")
+
     ; If user isn't pressing the hotkey, store cursor position for later
-    if (not active) {
+    if ( not active) {
         global cursorX := messageX
         global cursorY := messageY
         return DllCall("CallNextHookEx", "ptr", 0, "int", nCode, "ptr", wParam, "ptr", lParam)
@@ -180,9 +204,9 @@ SendWheel(deltaH, deltaV) {
             PostMessage(0x20E, deltaH << 16, highOrderY << 16 | lowOrderX, controlUnderMouse, "ahk_id " windowUnderMouse)  ; 0x20E = WM_MOUSEHWHEEL
     } else {
         if (deltaV != 0)
-            PostMessage(0x20A, deltaV << 16, highOrderY << 16 | lowOrderX,, "ahk_id " windowUnderMouse)  ; 0x20A = WM_MOUSEWHEEL
+            PostMessage(0x20A, deltaV << 16, highOrderY << 16 | lowOrderX, , "ahk_id " windowUnderMouse)  ; 0x20A = WM_MOUSEWHEEL
         if (deltaH != 0)
-            PostMessage(0x20E, deltaH << 16, highOrderY << 16 | lowOrderX,, "ahk_id " windowUnderMouse)  ; 0x20E = WM_MOUSEHWHEEL
+            PostMessage(0x20E, deltaH << 16, highOrderY << 16 | lowOrderX, , "ahk_id " windowUnderMouse)  ; 0x20E = WM_MOUSEHWHEEL
     }
 }
 
@@ -203,9 +227,9 @@ SendWheelWithModifiers(deltaH, deltaV, shift, ctrl, alt) {
             PostMessage(0x20E, deltaH << 16 | modifiers, highOrderY << 16 | lowOrderX, controlUnderMouse, "ahk_id " windowUnderMouse)  ; 0x20E = WM_MOUSEHWHEEL
     } else {
         if (deltaV != 0)
-            PostMessage(0x20A, deltaV << 16 | modifiers, highOrderY << 16 | lowOrderX,, "ahk_id " windowUnderMouse)  ; 0x20A = WM_MOUSEWHEEL
+            PostMessage(0x20A, deltaV << 16 | modifiers, highOrderY << 16 | lowOrderX, , "ahk_id " windowUnderMouse)  ; 0x20A = WM_MOUSEWHEEL
         if (deltaH != 0)
-            PostMessage(0x20E, deltaH << 16 | modifiers, highOrderY << 16 | lowOrderX,, "ahk_id " windowUnderMouse)  ; 0x20E = WM_MOUSEHWHEEL
+            PostMessage(0x20E, deltaH << 16 | modifiers, highOrderY << 16 | lowOrderX, , "ahk_id " windowUnderMouse)  ; 0x20E = WM_MOUSEHWHEEL
     }
 }
 
@@ -338,7 +362,7 @@ TimerScroll() {
     ; Apply sensitivity adjustment
     smoothedX *= sensitivity
     smoothedY *= sensitivity
-    
+
     ; Apply previous rounding errors, and save new rounding errors
     smoothedX += remainderX
     smoothedY += remainderY
@@ -348,6 +372,10 @@ TimerScroll() {
     global remainderY := smoothedY - roundedY
 
     ; Send wheel input
-    SendWheel(roundedX, roundedY)
+    if (outputMode = "volume") {
+        if (roundedY != 0)
+            AdjustVolume(roundedY)
+    } else {
+        SendWheel(roundedX, roundedY)
+    }
 }
-
