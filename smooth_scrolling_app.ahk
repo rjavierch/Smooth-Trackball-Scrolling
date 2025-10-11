@@ -9,6 +9,7 @@ Persistent
 
 hotkey1 := IniRead("config.ini", "Hotkeys", "hotkey1")
 hotkey2 := IniRead("config.ini", "Hotkeys", "hotkey2", "")
+hotkey3 := IniRead("config.ini", "Hotkeys", "hotkey3", "")
 panicButton := IniRead("config.ini", "Hotkeys", "panicButton", "")
 mode := IniRead("config.ini", "Hotkeys", "mode")
 holdDuration := IniRead("config.ini", "Hotkeys", "holdDuration") + 0
@@ -28,10 +29,10 @@ PanicFunction(_) {
 ; =============================================================================
 
 if (mode = "ON_OFF") {
-    Hotkey("$" hotkey1, OnOffKey1Down)
-    Hotkey("$" hotkey1 " Up", OnOffKey1Up)
-    Hotkey("$" hotkey2, OnOffKey2Down)
-    Hotkey("$" hotkey2 " Up", OnOffKey2Up)
+    Hotkey("*" hotkey1, OnOffKey1Down)
+    Hotkey("*" hotkey1 " Up", OnOffKey1Up)
+    Hotkey("*" hotkey2, OnOffKey2Down)
+    Hotkey("*" hotkey2 " Up", OnOffKey2Up)
 
     onOffKey1FlipFlop := false
     onOffKey2FlipFlop := false
@@ -66,10 +67,9 @@ if (mode = "ON_OFF") {
 ; =============================================================================
 ; ONE_KEY_TOGGLE
 ; =============================================================================
-
 else if (mode = "ONE_KEY_TOGGLE") {
-    Hotkey("$" hotkey1, OneKeyToggleDown)
-    Hotkey("$" hotkey1 " Up", OneKeyToggleUp)
+    Hotkey("*" hotkey1, OneKeyToggleDown)
+    Hotkey("*" hotkey1 " Up", OneKeyToggleUp)
 
     oneKeyToggleFlipFlop := false
 
@@ -96,8 +96,8 @@ else if (mode = "ONE_KEY_TOGGLE") {
 ; =============================================================================
 
 else if (mode = "ONE_KEY_MOMENTARY") {
-    Hotkey("$" hotkey1, OneKeyMomentaryDown)
-    Hotkey("$" hotkey1 " Up", OneKeyMomentaryUp)
+    Hotkey("*" hotkey1, OneKeyMomentaryDown)
+    Hotkey("*" hotkey1 " Up", OneKeyMomentaryUp)
 
     oneKeyMomentaryFlipFlop := false
 
@@ -108,11 +108,11 @@ else if (mode = "ONE_KEY_MOMENTARY") {
         oneKeyMomentaryFlipFlop := true
         ScrollingActivate()
     }
-    
+
     OneKeyMomentaryUp(_) {
         global oneKeyMomentaryFlipFlop
         oneKeyMomentaryFlipFlop := false
-        ScrollingDeactivate() 
+        ScrollingDeactivate()
     }
 }
 
@@ -121,8 +121,8 @@ else if (mode = "ONE_KEY_MOMENTARY") {
 ; =============================================================================
 
 else if (mode = "ONE_KEY_TAP_TOGGLE") {
-    Hotkey("$" hotkey1, OneKeyTapToggleDown)
-    Hotkey("$" hotkey1 " Up", OneKeyTapToggleUp)
+    Hotkey("*" hotkey1, OneKeyTapToggleDown)
+    Hotkey("*" hotkey1 " Up", OneKeyTapToggleUp)
 
     oneKeyTapToggleFlipFlop := false
     oneKeyTapToggleKeyDown := false
@@ -132,7 +132,7 @@ else if (mode = "ONE_KEY_TAP_TOGGLE") {
         oneKeyTapToggleKeyDown := true
         Send("{" hotkey1 " down}")
     }
-    
+
     OneKeyTapToggleDown(_) {
         global oneKeyTapToggleFlipFlop
         if (oneKeyTapToggleFlipFlop)
@@ -141,7 +141,7 @@ else if (mode = "ONE_KEY_TAP_TOGGLE") {
 
         SetTimer(OneKeyTapToggleTimer, -holdDuration)
     }
-    
+
     OneKeyTapToggleUp(_) {
         global oneKeyTapToggleFlipFlop, oneKeyTapToggleKeyDown
         oneKeyTapToggleFlipFlop := false
@@ -165,12 +165,12 @@ else if (mode = "ONE_KEY_TAP_TOGGLE") {
 ; =============================================================================
 
 else if (mode = "ONE_KEY_HOLD_TOGGLE") {
-    Hotkey("$" hotkey1, OneKeyHoldToggleDown)
-    Hotkey("$" hotkey1 " Up", OneKeyHoldToggleUp)
+    Hotkey("*" hotkey1, OneKeyHoldToggleDown)
+    Hotkey("*" hotkey1 " Up", OneKeyHoldToggleUp)
 
     oneKeyHoldToggleFlipFlop := false
     oneKeyHoldToggleLock := true
-    
+
     OneKeyHoldToggleTimer() {
         ScrollingActivate()
     }
@@ -197,7 +197,7 @@ else if (mode = "ONE_KEY_HOLD_TOGGLE") {
         if (oneKeyHoldToggleLock)
             return  ; ignore up event after toggle off
         SetTimer(OneKeyHoldToggleTimer, 0)
-        if (not IsSmoothScrollingActive())
+        if ( not IsSmoothScrollingActive())
             Send("{" hotkey1 " down}{" hotkey1 " up}")
     }
 }
@@ -207,17 +207,19 @@ else if (mode = "ONE_KEY_HOLD_TOGGLE") {
 ; =============================================================================
 
 else if (mode = "ONE_KEY_HOLD_MOMENTARY") {
-    Hotkey("$" hotkey1, OneKeyHoldMomentaryDown)
-    Hotkey("$" hotkey1 " Up", OneKeyHoldMomentaryUp)
+    Hotkey("*" hotkey1, OneKeyHoldMomentaryDown)
+    Hotkey("*" hotkey3, VolumeHoldMomentaryDown)
+    Hotkey("*" hotkey1 " Up", OneKeyHoldMomentaryUp)
+    Hotkey("*" hotkey3 " Up", VolumeHoldMomentaryUp)
 
     oneKeyHoldMomentaryFlipFlop := false
     oneKeyHoldMomentaryTapped := true
-    
+
     OneKeyHoldMomentaryTimer() {
         global oneKeyHoldMomentaryTapped
         oneKeyHoldMomentaryTapped := false
     }
-    
+
     OneKeyHoldMomentaryDown(_) {
         global oneKeyHoldMomentaryFlipFlop, oneKeyHoldMomentaryTapped
         if (oneKeyHoldMomentaryFlipFlop)
@@ -228,7 +230,7 @@ else if (mode = "ONE_KEY_HOLD_MOMENTARY") {
         oneKeyHoldMomentaryTapped := true
         SetTimer(OneKeyHoldMomentaryTimer, -holdDuration)
     }
-    
+
     OneKeyHoldMomentaryUp(_) {
         global oneKeyHoldMomentaryFlipFlop
         oneKeyHoldMomentaryFlipFlop := false
@@ -238,6 +240,33 @@ else if (mode = "ONE_KEY_HOLD_MOMENTARY") {
         if (oneKeyHoldMomentaryTapped)
             Send("{" hotkey1 " down}{" hotkey1 " up}")
     }
+
+    volumeHoldMomentaryFlipFlop := false
+    volumeHoldMomentaryTapped := true
+
+    VolumeHoldMomentaryTimer() {
+        global volumeHoldMomentaryTapped
+        volumeHoldMomentaryTapped := false
+    }
+
+    VolumeHoldMomentaryDown(_) {
+        global volumeHoldMomentaryFlipFlop, volumeHoldMomentaryTapped
+        if (volumeHoldMomentaryFlipFlop)
+            return  ; ignore autorepeats
+        volumeHoldMomentaryFlipFlop := true
+        VolumeActivate()                        ; start capture in volume mode
+        volumeHoldMomentaryTapped := true
+        SetTimer(VolumeHoldMomentaryTimer, -holdDuration)
+    }
+
+    VolumeHoldMomentaryUp(_) {
+        global volumeHoldMomentaryFlipFlop, volumeHoldMomentaryTapped
+        volumeHoldMomentaryFlipFlop := false
+        VolumeDeactivate()                      ; stop capture and restore mode
+        SetTimer(VolumeHoldMomentaryTimer, 0)
+        if (volumeHoldMomentaryTapped)
+            Send("{" hotkey3 " down}{" hotkey3 " up}")  ; pass-through tap
+    }
 }
 
 ; =============================================================================
@@ -245,10 +274,10 @@ else if (mode = "ONE_KEY_HOLD_MOMENTARY") {
 ; =============================================================================
 
 else if (mode = "TWO_KEY_TAP_TOGGLE") {
-    Hotkey("$" hotkey1, TwoKeyTapToggleKey1Down)
-    Hotkey("$" hotkey1 " Up", TwoKeyTapToggleKey1Up)
-    Hotkey("$" hotkey2, TwoKeyTapToggleKey2Down)
-    Hotkey("$" hotkey2 " Up", TwoKeyTapToggleKey2Up)
+    Hotkey("*" hotkey1, TwoKeyTapToggleKey1Down)
+    Hotkey("*" hotkey1 " Up", TwoKeyTapToggleKey1Up)
+    Hotkey("*" hotkey2, TwoKeyTapToggleKey2Down)
+    Hotkey("*" hotkey2 " Up", TwoKeyTapToggleKey2Up)
 
     twoKeyTapToggleKey1FlipFlop := false
     twoKeyTapToggleKey2FlipFlop := false
@@ -267,7 +296,7 @@ else if (mode = "TWO_KEY_TAP_TOGGLE") {
             Send("{" hotkey2 " down}")
         }
     }
-    
+
     TwoKeyTapToggleKey1Down(_) {
         global twoKeyTapToggleKey1FlipFlop, twoKeyTapToggleKey1State, twoKeyTapToggleTimedOut, twoKeyTapToggleLocked
         if (twoKeyTapToggleKey1FlipFlop)
@@ -289,7 +318,7 @@ else if (mode = "TWO_KEY_TAP_TOGGLE") {
         }
         if (twoKeyTapToggleKey2State) {
             SetTimer(TwoKeyTapToggleTimer, 0)
-            if (not IsSmoothScrollingActive()) {
+            if ( not IsSmoothScrollingActive()) {
                 ScrollingActivate()
             }
         } else {
@@ -318,7 +347,7 @@ else if (mode = "TWO_KEY_TAP_TOGGLE") {
         }
         if (twoKeyTapToggleKey1State) {
             SetTimer(TwoKeyTapToggleTimer, 0)
-            if (not IsSmoothScrollingActive()) {
+            if ( not IsSmoothScrollingActive()) {
                 ScrollingActivate()
             }
         } else {
@@ -333,11 +362,11 @@ else if (mode = "TWO_KEY_TAP_TOGGLE") {
         twoKeyTapToggleKey1State := false
         if (twoKeyTapToggleTimedOut) {
             Send("{" hotkey1 " up}")
-        } else if ((not IsSmoothScrollingActive()) and (not twoKeyTapToggleLocked)) {
+        } else if (( not IsSmoothScrollingActive()) and ( not twoKeyTapToggleLocked)) {
             Send("{" hotkey1 " down}")
             Send("{" hotkey1 " up}")
         }
-        if (not twoKeyTapToggleKey2State) {
+        if ( not twoKeyTapToggleKey2State) {
             SetTimer(TwoKeyTapToggleTimer, 0)
             twoKeyTapToggleTimedOut := false
             twoKeyTapToggleLocked := false
@@ -351,11 +380,11 @@ else if (mode = "TWO_KEY_TAP_TOGGLE") {
         twoKeyTapToggleKey2State := false
         if (twoKeyTapToggleTimedOut) {
             Send("{" hotkey2 " up}")
-        } else if ((not IsSmoothScrollingActive()) and (not twoKeyTapToggleLocked)) {
+        } else if (( not IsSmoothScrollingActive()) and ( not twoKeyTapToggleLocked)) {
             Send("{" hotkey2 " down}")
             Send("{" hotkey2 " up}")
         }
-        if (not twoKeyTapToggleKey1State) {
+        if ( not twoKeyTapToggleKey1State) {
             SetTimer(TwoKeyTapToggleTimer, 0)
             twoKeyTapToggleTimedOut := false
             twoKeyTapToggleLocked := false
