@@ -56,7 +56,7 @@ VolumeDeactivate() {
 
 AdjustVolume(deltaUnits) {
     step := 1  ; percent per unit (tune if desired)
-    change := deltaUnits * 0.05 * step
+    change := deltaUnits * volumeScrollSensitivity * step
     if (change = 0)
         return
     changeStr := (change > 0) ? ("+" . change) : ("" . change)
@@ -95,8 +95,9 @@ global cursorYMouseGetPos := 0
 global windowUnderMouse := ""
 global controlUnderMouse := ""
 
-; Volume mode
+; Volume Control
 global outputMode := "scroll"
+global volumeScrollSensitivity := IniRead("config.ini", "Volume Control", "sensitivity")
 
 ; Texture
 global sensitivity := IniRead("config.ini", "Texture", "sensitivity")
