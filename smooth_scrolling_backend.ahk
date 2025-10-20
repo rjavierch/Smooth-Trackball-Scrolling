@@ -54,13 +54,25 @@ VolumeDeactivate() {
     outputMode := "scroll"
 }
 
+; Adjust the system volume by a specified number of units.
 AdjustVolume(deltaUnits) {
-    step := 1  ; percent per unit (tune if desired)
-    change := deltaUnits * volumeScrollSensitivity * step
-    if (change = 0)
+    static accum := 0.0
+    change := deltaUnits * volumeScrollSensitivity
+    accum += change
+    toApply := Floor(Abs(accum))
+    if (toApply = 0)
         return
-    changeStr := (change > 0) ? ("+" . change) : ("" . change)
-    SoundSetVolume(changeStr)  ; relative +N / -N supported in v2
+    dir := (accum > 0) ? +1 : -1
+    rel := dir * toApply
+    count := Abs(rel)
+    if (dir > 0) {
+        Loop count
+            Send "{Volume_Up}"
+    } else {
+        Loop count
+            Send "{Volume_Down}"
+    }
+    accum -= rel
 }
 
 ; Turn angle snapping on.
